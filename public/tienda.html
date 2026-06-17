@@ -522,7 +522,25 @@ document.getElementById('mo-cliente').addEventListener('click', e => {
 });
 
 // Init
-cargarProductos();
+cargarProductos().then(() => {
+  // Si viene con ?add=ID desde la página web, agregar ese perfume al carrito
+  const params = new URLSearchParams(window.location.search);
+  const addId = params.get('add');
+  if (addId) {
+    // Esperar a que carguen los productos y luego agregar
+    const intentar = (intentos = 0) => {
+      const prod = todosProductos.find(p => p.id === addId || p.slug === addId);
+      if (prod && prod.stock > 0) {
+        agregarAlCarrito(prod.id, prod.nombre, prod.icono, prod.precio, prod.stock);
+        // Abrir el carrito automáticamente
+        setTimeout(() => toggleCart(), 400);
+      } else if (!prod && intentos < 5) {
+        setTimeout(() => intentar(intentos + 1), 500);
+      }
+    };
+    setTimeout(intentar, 800);
+  }
+});
 checkResultPage();
 </script>
 

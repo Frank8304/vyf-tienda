@@ -127,7 +127,23 @@ input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:#F4EFE6;padding:12px 24px;border-radius:4px;font-size:12px;font-weight:600;z-index:700;opacity:0;transition:all .3s;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
-/* Páginas de resultado */
+/* ENVIO */
+.envio-section{margin-top:14px;padding:14px 16px;background:#fff;border:1px solid var(--borderd);border-radius:4px}
+.envio-title{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink2);margin-bottom:10px}
+.envio-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--borderd);border-radius:4px;cursor:pointer;transition:all .2s}
+.envio-opt.selected{border-color:var(--ink);background:rgba(26,22,17,.04)}
+.envio-opt-nombre{font-size:12px;font-weight:600;color:var(--ink)}
+.envio-opt-desc{font-size:11px;color:var(--muted);margin-top:1px}
+.envio-opt-precio{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--ink);margin-left:auto}
+.envio-nota{font-size:11px;color:var(--muted);margin-top:10px;padding:8px 10px;background:rgba(184,149,74,.08);border-radius:4px;border-left:2px solid var(--gold);line-height:1.5}
+.cart-subtotal{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.cart-subtotal .lbl{font-size:12px;color:var(--muted)}
+.cart-subtotal .val{font-size:13px;font-weight:500}
+.cart-total-final{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--borderd)}
+.cart-total-final .lbl{font-size:13px;font-weight:600}
+.cart-total-final .val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600}
+
+/* Paginas de resultado */
 .result-page{display:none;text-align:center;padding:100px 5vw}
 .result-page.active{display:block}
 .result-page .icn{font-size:64px;margin-bottom:20px}
@@ -199,12 +215,33 @@ input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,
     </div>
   </div>
   <div class="cart-footer">
-    <div class="cart-total">
-      <span class="lbl">Total (sin envío)</span>
+    <div class="cart-subtotal">
+      <span class="lbl">Subtotal productos</span>
+      <span class="val" id="cartSubtotal">$0 MXN</span>
+    </div>
+    <div class="cart-subtotal">
+      <span class="lbl">Envio</span>
+      <span class="val" id="cartEnvioLabel">—</span>
+    </div>
+    <div class="cart-total-final">
+      <span class="lbl">Total</span>
       <span class="val" id="cartTotal">$0</span>
     </div>
-    <p class="cart-envio">+ Costo de envío a definir según tu ubicación</p>
-    <div class="checkout-section">
+    <div class="envio-section" id="envio-section" style="display:none">
+      <div class="envio-title">Tipo de envio</div>
+      <div class="envio-opt selected" id="opt-terrestre">
+        <span style="font-size:20px">📦</span>
+        <div>
+          <div class="envio-opt-nombre">Terrestre</div>
+          <div class="envio-opt-desc">3-5 dias habiles · Todo Mexico</div>
+        </div>
+        <div class="envio-opt-precio">$130</div>
+      </div>
+      <div class="envio-nota" id="envio-nota">
+        Envio fijo de <strong>$130 MXN</strong> hasta 2 perfumes a todo Mexico.
+      </div>
+    </div>
+    <div class="checkout-section" style="margin-top:14px">
       <button class="btn-mp" id="btnMP" onclick="iniciarPagoMP()" disabled>
         💳 Pagar con Mercado Pago
       </button>
@@ -387,16 +424,46 @@ function cambiarCantidad(id, delta) {
   actualizarCarrito();
 }
 
+const ENVIO_FIJO = 130;
+const ENVIO_MAX_PIEZAS = 2;
+
+function calcularEnvio() {
+  return carrito.length > 0 ? ENVIO_FIJO : 0;
+}
+
 function actualizarCarrito() {
-  const count = carrito.reduce((a, i) => a + i.cantidad, 0);
-  const total = carrito.reduce((a, i) => a + i.precio * i.cantidad, 0);
-  
+  const count    = carrito.reduce((a,i) => a + i.cantidad, 0);
+  const subtotal = carrito.reduce((a,i) => a + i.precio * i.cantidad, 0);
+  const envio    = calcularEnvio();
+  const total    = subtotal + envio;
+  const muchas   = count > ENVIO_MAX_PIEZAS;
+
   document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartSubtotal').textContent = '$' + subtotal.toLocaleString('es-MX') + ' MXN';
+  document.getElementById('cartEnvioLabel').textContent = carrito.length > 0 ? '$' + envio.toLocaleString('es-MX') + ' MXN' : '—';
   document.getElementById('cartTotal').textContent = '$' + total.toLocaleString('es-MX');
-  
+
+  const envioSection = document.getElementById('envio-section');
+  if (envioSection) envioSection.style.display = carrito.length > 0 ? 'block' : 'none';
+
+  const nota = document.getElementById('envio-nota');
+  if (nota) {
+    if (muchas) {
+      nota.innerHTML = '⚠️ Tu pedido tiene <strong>' + count + ' perfumes</strong>. Para pedidos de mas de 2 piezas el envio se cotiza por WhatsApp segun tu ubicacion.';
+    } else {
+      nota.innerHTML = '🚚 Envio fijo de <strong>$130 MXN</strong> hasta 2 perfumes a todo Mexico.';
+    }
+  }
+
   const btnMP = document.getElementById('btnMP');
   const btnWA = document.getElementById('btnWA');
-  btnMP.disabled = carrito.length === 0;
+  if (muchas) {
+    btnMP.disabled = true;
+    btnMP.innerHTML = '💳 Pago en linea (max. 2 piezas)';
+  } else {
+    btnMP.disabled = carrito.length === 0;
+    btnMP.innerHTML = '💳 Pagar con Mercado Pago';
+  }
   btnWA.disabled = carrito.length === 0;
   
   const itemsEl = document.getElementById('cartItems');
@@ -448,12 +515,21 @@ async function confirmarPagoMP() {
   btn.disabled = true;
   
   try {
-    const items = carrito.map(i => ({
-      perfume_id: i.id,
-      nombre: i.nombre,
-      cantidad: i.cantidad,
-      precio: i.precio
-    }));
+    const envioMP = calcularEnvio();
+    const items = [
+      ...carrito.map(i => ({
+        perfume_id: i.id,
+        nombre: i.nombre,
+        cantidad: i.cantidad,
+        precio: i.precio
+      })),
+      ...(envioMP > 0 ? [{
+        perfume_id: 'envio',
+        nombre: 'Envio terrestre a todo Mexico',
+        cantidad: 1,
+        precio: envioMP
+      }] : [])
+    ];
     
     const res = await fetch(`${API_BASE}/crear-pago`, {
       method: 'POST',
@@ -481,15 +557,20 @@ async function confirmarPagoMP() {
 function pedirWA() {
   if (!carrito.length) return;
   
-  const total = carrito.reduce((a, i) => a + i.precio * i.cantidad, 0);
-  let msg = '¡Hola! Quiero hacer el siguiente pedido en V&F Jewelry & Parfum:\n\n';
-  
+  const subtotalWA = carrito.reduce((a,i) => a + i.precio * i.cantidad, 0);
+  const countWA    = carrito.reduce((a,i) => a + i.cantidad, 0);
+  const envioWA    = calcularEnvio();
+  const totalWA    = subtotalWA + envioWA;
+  let msg = '¡Hola! Quiero hacer el siguiente pedido en V&F Jewelry & Parfum 🦋\n\n';
+
   carrito.forEach(item => {
-    msg += `${item.icono} ${item.nombre} x${item.cantidad} — $${item.precio * item.cantidad} MXN\n`;
+    msg += item.icono + ' ' + item.nombre + ' x' + item.cantidad + ' — $' + (item.precio * item.cantidad).toLocaleString('es-MX') + ' MXN\n';
   });
-  
-  msg += `\n*Total: $${total.toLocaleString('es-MX')} MXN* (+ envío)`;
-  msg += '\n\n¿Podrían confirmar disponibilidad y coordinar el envío?';
+
+  msg += '\n📦 Envio: $' + envioWA.toLocaleString('es-MX') + ' MXN';
+  if (countWA > 2) msg += ' (a cotizar segun ubicacion)';
+  msg += '\n*Total estimado: $' + totalWA.toLocaleString('es-MX') + ' MXN*';
+  msg += '\n\n¿Pueden confirmar disponibilidad y datos de envio? 🙏';
   
   window.open(`https://wa.me/${WA_NUM}?text=${encodeURIComponent(msg)}`, '_blank');
 }

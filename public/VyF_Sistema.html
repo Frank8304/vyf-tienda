@@ -143,16 +143,6 @@ tr:hover td{background:rgba(201,168,76,.04)}
       <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
       <button class="btn btn-lg" style="margin-top:18px" onclick="doLogin()">Entrar</button>
       <p class="l-err" id="l-err"></p>
-      <p class="l-link" onclick="showReg()">Crear cuenta nueva</p>
-    </div>
-    <div id="lf-reg" style="display:none">
-      <label>Correo electrónico</label>
-      <input type="email" id="r-email" placeholder="tu@correo.com">
-      <label>Contraseña (mín. 6 caracteres)</label>
-      <input type="password" id="r-pass" placeholder="••••••••">
-      <button class="btn btn-lg" style="margin-top:18px" onclick="doReg()">Crear cuenta</button>
-      <p class="l-err" id="r-err"></p>
-      <p class="l-link" onclick="showLogin()">Ya tengo cuenta</p>
     </div>
   </div>
 </div>
@@ -317,8 +307,7 @@ document.querySelectorAll('.mo').forEach(m=>{
 // ══════════════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════════════
-function showLogin(){ $('lf-in').style.display=''; $('lf-reg').style.display='none'; }
-function showReg()  { $('lf-in').style.display='none'; $('lf-reg').style.display=''; }
+function showLogin(){ $('lf-in').style.display=''; }
 
 async function doLogin(){
   const email=$('l-email').value.trim(), pass=$('l-pass').value;
@@ -340,17 +329,6 @@ async function doLogin(){
   }
   SESSION.perfil = perfil;
   bootApp(perfil.nombre || res.user.email);
-}
-
-async function doReg(){
-  const email=$('r-email').value.trim(), pass=$('r-pass').value;
-  if(!email||!pass||pass.length<6){$('r-err').textContent='Completa los campos (mín. 6 caracteres).';return;}
-  $('r-err').textContent='Creando cuenta...';
-  const res = await sb.signUp(email, pass);
-  if(res.error){ $('r-err').textContent=res.error.message; return; }
-  $('r-err').textContent='';
-  toast('Cuenta creada. Revisa tu correo para confirmar.');
-  showLogin();
 }
 
 async function doLogout(){

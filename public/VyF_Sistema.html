@@ -387,7 +387,7 @@ async function loadCache(){
       sb.get('productos','select=id,nombre,tipo,genero,precio_base,activo&order=nombre',tok()),
       sb.get('materias_primas','select=id,nombre,unidad,costo_vigente,activo&order=nombre',tok()),
       sb.get('proveedores','select=id,nombre&order=nombre',tok()),
-      sb.get('canales_venta','select=id,nombre,tipo&order=nombre',tok()),
+      sb.get('canales_venta','select=id,nombre&order=nombre',tok()),
     ]);
     CACHE.productos=p||[]; CACHE.mp=m||[]; CACHE.proveedores=pr||[]; CACHE.canales=c||[];
   }catch(e){console.error('cache',e);}
@@ -1412,14 +1412,7 @@ async function abrirFormCanal(id=null){
   box.innerHTML=`
 <div class="mo-hdr"><h2>${id?'Editar Canal':'Nuevo Canal de Venta'}</h2><button class="mo-close" onclick="closeModal('mo-canal')">×</button></div>
 <label>Nombre</label><input id="cv-nombre" value="${p.nombre||''}">
-<label>Tipo</label><select id="cv-tipo">
-  <option value="presencial" ${p.tipo==='presencial'?'selected':''}>Presencial</option>
-  <option value="instagram" ${p.tipo==='instagram'?'selected':''}>Instagram</option>
-  <option value="facebook" ${p.tipo==='facebook'?'selected':''}>Facebook</option>
-  <option value="whatsapp" ${p.tipo==='whatsapp'?'selected':''}>WhatsApp</option>
-  <option value="tienda_en_linea" ${p.tipo==='tienda_en_linea'?'selected':''}>Tienda en Línea</option>
-  <option value="otro" ${p.tipo==='otro'?'selected':''}>Otro</option>
-</select>
+<label>Descripción</label><input id="cv-desc" placeholder="Ej: Instagram, WhatsApp, Tienda física..." value="${p.descripcion||''}">
 <div class="divl"></div>
 <div style="display:flex;gap:8px;justify-content:flex-end">
   <button class="btn btn-ghost" onclick="closeModal('mo-canal')">Cancelar</button>
@@ -1431,7 +1424,7 @@ async function abrirFormCanal(id=null){
 async function editarCanal(id){ abrirFormCanal(id); }
 
 async function guardarCanal(id){
-  const body={nombre:$('cv-nombre').value.trim(),tipo:$('cv-tipo').value,user_id:SESSION.user.id};
+  const body={nombre:$('cv-nombre').value.trim(),descripcion:$('cv-desc').value.trim()||null,user_id:SESSION.user.id};
   if(!body.nombre){toast('Nombre requerido','err');return;}
   try{
     if(id) await sb.patch('canales_venta',id,body,tok());
